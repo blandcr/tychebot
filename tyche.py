@@ -13,7 +13,7 @@ def get_args ():
 
     pp = ap.ArgumentParser ()
 
-    pp.AddArgument (
+    pp.add_argument (
         "--config",
         dest="config",
         help="path to config file.",
@@ -23,12 +23,12 @@ def get_args ():
     return pp.parse_args ()
 
 def load_config (config_path):
-    from yaml import safe_load_all, YAMLError
+    from yaml import safe_load, YAMLError
 
     try:
         with open (config_path, 'r') as ff:
             try:
-                config = safe_load_all (ff)
+                config = safe_load (ff)
                 if config is None:
                     print ("Config file is empty or unrecognizable!")
                     sys.exit (-1)
@@ -42,11 +42,15 @@ def load_config (config_path):
         sys.exit (-1)
 
 def munge (config):
-    if not config.has_key ('prefix'):
-        config['prefix'] = '.'
+    try:
+        config['prefix']
+    except Exception:
+        config['prefix'] = '!'
 
 def verify (config):
-    if not config.has_key ('token'):
+    try:
+        config['token']
+    except Exception:
         print ('Config file must have a `token : <YOUR DISCORD TOKEN>` entry')
         sys.exit (-1)
 
@@ -84,34 +88,44 @@ Examples:
 """
     )
     @asyncio.coroutine
-    def roll_action (
-        context,
-        request
+    def roll (
+        context
     ):
+        import pdb
+        request = context.message.content[
+            len(''.join ((context.prefix, context.command.name))):
+        ].lstrip(' ')
         try:
             rolls = (map(int, roll.split('d')) for roll in request.split(' '))
         except Exception:
             yield from tyche.say (
-                '{}, I do not understand what is this.'.format(context.author)
+                '{}, I do not understand what is this.'.format(
+                    context.author.nick
+                 )
             )
 
         try:
+            #pdb.set_trace()
             out = ''
             for roll in rolls:
-                out = out + '{}d{} :'.format(roll)
+                num_dice, die_order = roll
+                out = out + '`{}d{} : '.format(num_dice, die_order)
                 total = 0
-                for die in range (roll[0]):
-                    result = rng.randint(0, roll[1])
+                for die in range (num_dice):
+                    result = rng.randint(1, die_order)
                     total = total + result
                     out = out + '{}, '.format(result)
                 out = out[:-2] # strip the trailing ` ,`
-                out = out + ' -> {} | '.format(total)
+                out = out + ' -> {}` | '.format(total)
             out = out[:-3] # strip the trailing ` | `
-            yield from tyche.say ('{} : {}'.format (context.author, out))
+            yield from tyche.say (
+                '{} : {}'.format (context.message.author.nick, out)
+            )
         except Exception:
             yield from tyche.say (
                 'OH GOD SOMETHING HAPPENED AND WAS HORRIBLE PLS SAVE ME'
             )
+    tyche.run(config['token'])
 
 if __name__ == "__main__":
 
