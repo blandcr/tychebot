@@ -8,7 +8,7 @@
 
 import sys
 
-def get_config ():
+def get_args ():
     import argparse as ap
 
     pp = ap.ArgumentParser ()
