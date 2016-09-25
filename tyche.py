@@ -70,6 +70,8 @@ def diceroll_inner(expr):
         roll[0] = "1"
 
     num_dice, die_order = map(int, roll)
+    num_dice = max(min(num_dice, 256), 0) # 0 to 256 dice
+
     for die in range(num_dice):
         result = rng.randint(1, die_order)
         out.append(result)
@@ -105,7 +107,7 @@ def run (config):
 
     tyche = commands.Bot (
         command_prefix=config['prefix'],
-        deascription='What fortunes may come your way are for me to decide.'
+        description='What fortunes may come your way are for me to decide.'
     )
 
     @tyche.event
@@ -134,8 +136,14 @@ Exampls:
 
         inter = re.sub(r'\d*d\d+', diceroll_repl, request)
 
+        def evaluate(repl):
+            print( repl.group(2) )
+            return repl.group(1) + '{}'.format(tyche_calc_parser.evaluate(repl.group(2)))
+
+        result = re.sub(r'(\s*)([\s\-+*/()\d]*[\-+*/()\d])', evaluate, inter)
+
         yield from tyche.say (
-            '{} : `{} : {} -> {}`'.format (context.message.author.display_name, request, inter, tyche_calc_parser.evaluate(inter))
+            '{} : `{} : {} -> {}`'.format (context.message.author.display_name, request, inter, result)
         )
 
     @tyche.command (
