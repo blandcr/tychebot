@@ -137,7 +137,6 @@ Exampls:
         inter = re.sub(r'\d*d\d+', diceroll_repl, request)
 
         def evaluate(repl):
-            print( repl.group(2) )
             return repl.group(1) + '{}'.format(tyche_calc_parser.evaluate(repl.group(2)))
 
         result = re.sub(r'(\s*)([\s\-+*/()\d]*[\-+*/()\d])', evaluate, inter)
