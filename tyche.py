@@ -7,6 +7,8 @@
 # \author       Clint Bland
 
 import sys
+import tyche_calc_parser
+
 
 def get_args ():
     import argparse as ap
@@ -54,14 +56,52 @@ def verify (config):
         print ('Config file must have a `token : <YOUR DISCORD TOKEN>` entry')
         sys.exit (-1)
 
+
+# takes an expr like "1d6" and returns an array of results of dice rolls
+def diceroll_inner(expr):
+    import random
+    rng = random.SystemRandom()
+
+    out = []
+    roll = expr.split('d')
+
+    # default to 1d if num_dice is omitted
+    if roll[0] == '':
+        roll[0] = "1"
+
+    num_dice, die_order = map(int, roll)
+    for die in range(num_dice):
+        result = rng.randint(1, die_order)
+        out.append(result)
+    return out
+
+
+# takes an expr like "2d6" and returns a result as "result+result"
+def diceroll_repl(expr):
+    out = ''
+    for result in diceroll_inner( expr.group(0) ):
+        out += '{}+'.format(result)
+    return '('+out[:-1]+')' # strip the trailing `+`
+
+
+# takes an expr like "1d6" and returns a result as "1d6 : <result> -> <total>"
+def diceroll(expr):
+
+    out = '`' + expr + ' : '
+    total = 0
+    for result in diceroll_inner(expr):
+        total = total + result
+        out += '{}, '.format(result)
+    out = out[:-2]  # strip the trailing ` ,`
+    out += ' -> {}` | '.format(total)
+
+    return out
+
+
 def run (config):
     import discord
     import asyncio
     from discord.ext import commands
-
-    import random
-
-    rng = random.SystemRandom()
 
     tyche = commands.Bot (
         command_prefix=config['prefix'],
@@ -76,16 +116,41 @@ def run (config):
     @tyche.command (
         pass_context=True,
         description= \
-"""
-Roll the specified dice, even if they are a geometrical impossibility in our
-euclidean 3space.
-Examples:
-    !roll 1d6     -- rolls 1d6
-    !roll 3d20    -- rolls 3d20, providing each roll as well as the sum
-    !roll 4d7     -- rolls 4d7 (what's a seven sided die?)
-    !roll 1d6 2d3 -- rolls 1d6 and then 2d3, providing each roll as well as the
-                     sum of the 2d3
-"""
+                """
+                Perform the specified calculation, replaces dice rolls with their results.
+                Exampls:
+                    !calc d6          -- rolls 1d6
+                    !calc 20d20 + 10  -- rolls 20d20 and adds 10
+                """
+    )
+    @asyncio.coroutine
+    def calc (
+        context
+    ):
+        import re
+        request = context.message.content[
+                  len(''.join ((context.prefix, context.command.name))):
+                  ].lstrip(' ')
+
+        inter = re.sub(r'\d*d\d+', diceroll_repl, request)
+
+        yield from tyche.say (
+            '{} : {} -> {}'.format (context.message.author.nick, inter, tyche_calc_parser.evaluate(inter))
+        )
+
+    @tyche.command (
+        pass_context=True,
+        description= \
+                """
+                Roll the specified dice, even if they are a geometrical impossibility in our
+                euclidean 3space.
+                Examples:
+                    !roll 1d6     -- rolls 1d6
+                    !roll 3d20    -- rolls 3d20, providing each roll as well as the sum
+                    !roll 4d7     -- rolls 4d7 (what's a seven sided die?)
+                    !roll 1d6 2d3 -- rolls 1d6 and then 2d3, providing each roll as well as the
+                                     sum of the 2d3
+                """
     )
     @asyncio.coroutine
     def roll (
@@ -96,27 +161,19 @@ Examples:
             len(''.join ((context.prefix, context.command.name))):
         ].lstrip(' ')
         try:
-            rolls = (map(int, roll.split('d')) for roll in request.split(' '))
+            rolls = request.split(' ')
         except Exception:
             yield from tyche.say (
                 '{}, I do not understand what is this.'.format(
                     context.author.nick
-                 )
+                )
             )
 
         try:
             #pdb.set_trace()
             out = ''
             for roll in rolls:
-                num_dice, die_order = roll
-                out = out + '`{}d{} : '.format(num_dice, die_order)
-                total = 0
-                for die in range (num_dice):
-                    result = rng.randint(1, die_order)
-                    total = total + result
-                    out = out + '{}, '.format(result)
-                out = out[:-2] # strip the trailing ` ,`
-                out = out + ' -> {}` | '.format(total)
+                out += diceroll(roll)
             out = out[:-3] # strip the trailing ` | `
             yield from tyche.say (
                 '{} : {}'.format (context.message.author.nick, out)
