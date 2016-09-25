@@ -135,7 +135,7 @@ Exampls:
         inter = re.sub(r'\d*d\d+', diceroll_repl, request)
 
         yield from tyche.say (
-            '{} : {} -> {}'.format (context.message.author.nick, inter, tyche_calc_parser.evaluate(inter))
+            '{} : `{} : {} -> {}`'.format (context.message.author.nick, request, inter, tyche_calc_parser.evaluate(inter))
         )
 
     @tyche.command (
