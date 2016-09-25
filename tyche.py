@@ -116,12 +116,12 @@ def run (config):
     @tyche.command (
         pass_context=True,
         description= \
-                """
-                Perform the specified calculation, replaces dice rolls with their results.
-                Exampls:
-                    !calc d6          -- rolls 1d6
-                    !calc 20d20 + 10  -- rolls 20d20 and adds 10
-                """
+"""
+Perform the specified calculation, replaces dice rolls with their results.
+Exampls:
+    !calc d6          -- rolls 1d6
+    !calc 20d20 + 10  -- rolls 20d20 and adds 10
+"""
     )
     @asyncio.coroutine
     def calc (
@@ -141,16 +141,16 @@ def run (config):
     @tyche.command (
         pass_context=True,
         description= \
-                """
-                Roll the specified dice, even if they are a geometrical impossibility in our
-                euclidean 3space.
-                Examples:
-                    !roll 1d6     -- rolls 1d6
-                    !roll 3d20    -- rolls 3d20, providing each roll as well as the sum
-                    !roll 4d7     -- rolls 4d7 (what's a seven sided die?)
-                    !roll 1d6 2d3 -- rolls 1d6 and then 2d3, providing each roll as well as the
-                                     sum of the 2d3
-                """
+"""
+Roll the specified dice, even if they are a geometrical impossibility in our
+euclidean 3space.
+Examples:
+    !roll 1d6     -- rolls 1d6
+    !roll 3d20    -- rolls 3d20, providing each roll as well as the sum
+    !roll 4d7     -- rolls 4d7 (what's a seven sided die?)
+    !roll 1d6 2d3 -- rolls 1d6 and then 2d3, providing each roll as well as the
+                     sum of the 2d3
+"""
     )
     @asyncio.coroutine
     def roll (
