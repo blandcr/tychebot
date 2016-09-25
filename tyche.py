@@ -135,7 +135,7 @@ Exampls:
         inter = re.sub(r'\d*d\d+', diceroll_repl, request)
 
         yield from tyche.say (
-            '{} : `{} : {} -> {}`'.format (context.message.author.nick, request, inter, tyche_calc_parser.evaluate(inter))
+            '{} : `{} : {} -> {}`'.format (context.message.author.display_name, request, inter, tyche_calc_parser.evaluate(inter))
         )
 
     @tyche.command (
@@ -165,7 +165,7 @@ Examples:
         except Exception:
             yield from tyche.say (
                 '{}, I do not understand what is this.'.format(
-                    context.author.nick
+                    context.author.display_name
                 )
             )
 
@@ -176,7 +176,7 @@ Examples:
                 out += diceroll(roll)
             out = out[:-3] # strip the trailing ` | `
             yield from tyche.say (
-                '{} : {}'.format (context.message.author.nick, out)
+                '{} : {}'.format (context.message.author.display_name, out)
             )
         except Exception:
             yield from tyche.say (
