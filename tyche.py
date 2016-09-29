@@ -6,6 +6,7 @@
 # \version      0.a
 # \author       Clint Bland
 
+import re
 import sys
 import tyche_calc_parser
 
@@ -88,7 +89,6 @@ def diceroll_repl(expr):
 
 # takes an expr like "1d6" and returns a result as "1d6 : <result> -> <total>"
 def diceroll(expr):
-
     out = '`' + expr + ' : '
     total = 0
     for result in diceroll_inner(expr):
@@ -113,7 +113,9 @@ def run (config):
     @tyche.event
     @asyncio.coroutine
     def on_ready ():
-        print('(II) Logged in as {} | {}'.format(tyche.user.name, tyche.user.id))
+        print(
+            '(II) Logged in as {} | {}'.format(tyche.user.name, tyche.user.id)
+        )
 
     @tyche.command (
         pass_context=True,
@@ -129,20 +131,24 @@ Exampls:
     def calc (
         context
     ):
-        import re
         request = context.message.content[
-                  len(''.join ((context.prefix, context.command.name))):
-                  ].lstrip(' ')
+            len(''.join ((context.prefix, context.command.name))):
+        ].lstrip(' ')
 
         inter = re.sub(r'\d*d\d+', diceroll_repl, request)
 
         def evaluate(repl):
-            return repl.group(1) + '{}'.format(tyche_calc_parser.evaluate(repl.group(2)))
+            return ''.join([
+                repl.group(1),
+                '{}'.format(tyche_calc_parser.evaluate(repl.group(2)))
+            ])
 
         result = re.sub(r'(\s*)([\s\-+*/()\d]*[\-+*/()\d])', evaluate, inter)
 
         yield from tyche.say (
-            '{} : `{} : {} -> {}`'.format (context.message.author.display_name, request, inter, result)
+            '{} : `{} : {} -> {}`'.format (
+                context.message.author.display_name, request, inter, result
+            )
         )
 
     @tyche.command (
@@ -163,21 +169,12 @@ Examples:
     def roll (
         context
     ):
-        import pdb
         request = context.message.content[
             len(''.join ((context.prefix, context.command.name))):
         ].lstrip(' ')
-        try:
-            rolls = request.split(' ')
-        except Exception:
-            yield from tyche.say (
-                '{}, I do not understand what is this.'.format(
-                    context.author.display_name
-                )
-            )
+        rolls = request.split(' ')
 
         try:
-            #pdb.set_trace()
             out = ''
             for roll in rolls:
                 out += diceroll(roll)
@@ -189,6 +186,8 @@ Examples:
             yield from tyche.say (
                 'OH GOD SOMETHING HAPPENED AND WAS HORRIBLE PLS SAVE ME'
             )
+
+    # RUN!
     tyche.run(config['token'])
 
 if __name__ == "__main__":
