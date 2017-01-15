@@ -4,7 +4,7 @@
 
 # \copyright    Copyright (c) 2016 Clint Bland (http://vela.みんな)
 # \version      0.a
-# \author       Clint Bland
+# \authors      Clint Bland, `Trugath`
 
 import re
 import sys
